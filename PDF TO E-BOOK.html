@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PDF TO E-BOOK</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap">
+<style>
+:root{--bg:#faf7f0;--surface:#fff;--text:#2b2d33;--muted:#6b6e76;--accent:#1f3a68;--accent-t:#fff;--line:#e4dfd3;--stage:#ece7da;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16181d;--surface:#20232a;--text:#e8e6e1;--muted:#9a9da6;--accent:#7fa3e0;--accent-t:#10131a;--line:#33373f;--stage:#101216}}
+:root[data-theme="dark"]{--bg:#16181d;--surface:#20232a;--text:#e8e6e1;--muted:#9a9da6;--accent:#7fa3e0;--accent-t:#10131a;--line:#33373f;--stage:#101216}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box}
+body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.6}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{background:var(--accent);color:var(--accent-t);border:0;border-radius:10px;padding:12px 22px;font-weight:700}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.ib{background:transparent;border:1px solid transparent;border-radius:8px;padding:6px 10px;min-width:36px;color:var(--text)}
+.ib:hover{background:var(--line)}
+.hide{display:none!important}
+h1,h2{font-family:"Noto Serif KR",serif;margin:0}
+/* home */
+#home{max-width:960px;margin:0 auto;padding:32px 20px 64px}
+.logo{font-family:"Noto Serif KR",serif;font-weight:700;letter-spacing:.08em;color:var(--accent)}
+.hero{text-align:center;padding:48px 0 28px}
+.hero h1{font-size:clamp(28px,5vw,44px);line-height:1.3}
+.hero p{color:var(--muted);margin:12px 0 0}
+#drop{border:2px dashed var(--line);background:var(--surface);border-radius:18px;padding:44px 20px;text-align:center;transition:.2s}
+#drop.over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+#drop small{display:block;color:var(--muted);margin-top:14px}
+#err{color:#b3261e;margin-top:14px;font-weight:500;min-height:1.6em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:40px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h3{margin:0 0 6px;font-size:16px}.card p{margin:0;color:var(--muted);font-size:14px}
+h2{font-size:22px;margin-top:44px}
+/* convert */
+#conv{max-width:520px;margin:12vh auto;padding:0 20px;text-align:center}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:18px 0 8px}
+.bar>i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+#cover{display:block;margin:0 auto 18px;max-height:240px;border-radius:4px;box-shadow:0 8px 24px #0004}
+/* viewer */
+#viewer{height:100%;display:flex;flex-direction:column}
+.top,.bot{display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--line)}
+.bot{border-bottom:0;border-top:1px solid var(--line)}
+.top .ttl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;text-align:center}
+.focus .top,.focus .bot{display:none}
+.main{flex:1;min-height:0;display:flex;position:relative}
+#stage{flex:1;min-width:0;background:var(--stage);overflow:auto;display:flex;padding:16px}
+#book{margin:auto;flex:none}
+.pg{background:#fff;overflow:hidden}
+.pg canvas{width:100%;height:100%;object-fit:contain;display:block}
+.pg.back{background:var(--accent)}
+.pg.hard{box-shadow:inset 0 0 12px #0003}
+#panel{width:320px;max-width:86vw;background:var(--surface);border-left:1px solid var(--line);overflow:auto;padding:14px}
+#panel h3{margin:0 0 10px;font-size:16px}
+#panel .it{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:8px 4px;font-size:14px}
+#panel .it:hover{background:var(--line)}
+#panel input[type=text],#pn{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
+@media(max-width:720px){#panel{position:absolute;right:0;top:0;bottom:0;z-index:5;box-shadow:-8px 0 24px #0003}}
+#sl{flex:1;min-width:60px;accent-color:var(--accent)}
+#pn{width:64px;text-align:center}
+.pg-info{font-size:13px;color:var(--muted);white-space:nowrap}
+.mini{height:4px;background:var(--line)}.mini>i{display:block;height:100%;background:var(--accent);width:0}
+.row{display:flex;gap:8px;align-items:center;margin:10px 0;font-size:14px;flex-wrap:wrap}
+.hdrbtn{display:none}
+</style>
+</head>
+<body>
+
+<section id="home">
+  <div class="logo">📖 PDF TO E-BOOK</div>
+  <div class="hero">
+    <h1>당신의 PDF를 한 권의 전자책으로</h1>
+    <p>파일을 업로드하고, 종이책처럼 펼쳐 읽어보세요.</p>
+  </div>
+  <div id="drop">
+    <p style="margin:0 0 16px;font-weight:500">PDF 파일을 여기에 끌어다 놓으세요</p>
+    <button class="btn" id="pick">PDF 전자책 만들기</button>
+    <input type="file" id="file" accept="application/pdf,.pdf" hidden>
+    <small>지원 형식: PDF · 최대 50MB · 회원가입 없이 이용</small>
+    <div id="err" role="alert"></div>
+  </div>
+  <h2>주요 기능</h2>
+  <div class="grid">
+    <div class="card"><h3>원본 그대로</h3><p>PDF.js로 각 페이지를 그대로 렌더링해 글꼴·이미지·표·비율을 유지합니다.</p></div>
+    <div class="card"><h3>책장 넘김</h3><p>드래그, 모서리 클릭, 방향키, 터치 스와이프로 페이지를 넘깁니다.</p></div>
+    <div class="card"><h3>읽기 도구</h3><p>목차, 본문 검색, 확대·축소, 전체 화면, 어두운 테마, 집중 모드.</p></div>
+  </div>
+  <h2>이용 방법</h2>
+  <div class="grid">
+    <div class="card"><h3>1. 업로드</h3><p>PDF를 끌어놓거나 버튼으로 선택합니다.</p></div>
+    <div class="card"><h3>2. 변환</h3><p>페이지 정보를 읽고 앞쪽 페이지를 먼저 준비합니다.</p></div>
+    <div class="card"><h3>3. 열람</h3><p>전자책 열기를 눌러 펼쳐 읽습니다.</p></div>
+  </div>
+  <h2>개인정보 및 파일 처리 정책</h2>
+  <div class="card"><p>업로드한 PDF는 사용자의 브라우저 메모리에서만 처리되며 서버로 전송하거나 저장하지 않습니다. 전자책을 닫거나 다른 파일을 열거나 탭을 닫으면 데이터가 사라집니다. 별도의 회원가입·로그인은 없습니다.</p></div>
+</section>
+
+<section id="conv" class="hide">
+  <canvas id="cover" class="hide"></canvas>
+  <h2 id="cname" style="font-size:18px;word-break:break-all"></h2>
+  <p id="cmeta" style="color:var(--muted);margin:4px 0 0"></p>
+  <div class="bar"><i id="cbar"></i></div>
+  <p id="cstat" style="margin:0 0 18px"></p>
+  <button class="btn hide" id="open">전자책 열기</button>
+  <button class="btn ghost" id="cancel">취소</button>
+</section>
+
+<section id="viewer" class="hide">
+  <div class="top">
+    <button class="ib" id="home-b" title="메인으로">← 메인</button>
+    <div class="ttl" id="title"></div>
+    <button class="ib" id="zo" title="축소">−</button>
+    <button class="ib" id="zi" title="확대">+</button>
+    <button class="ib" id="toc-b">목차</button>
+    <button class="ib" id="se-b">검색</button>
+    <button class="ib" id="set-b">설정</button>
+    <button class="ib" id="fs-b">전체화면</button>
+  </div>
+  <div class="main">
+    <div id="stage"></div>
+    <aside id="panel" class="hide"></aside>
+  </div>
+  <div class="mini"><i id="prog"></i></div>
+  <div class="bot">
+    <button class="ib" id="prev" title="이전 페이지">◀</button>
+    <input type="range" id="sl" min="1" value="1" aria-label="페이지 이동">
+    <button class="ib" id="next" title="다음 페이지">▶</button>
+    <input type="number" id="pn" min="1" aria-label="페이지 번호">
+    <span class="pg-info" id="pinfo"></span>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+<script>
+const $=id=>document.getElementById(id), MAX=50*1024*1024;
+if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+let pdf=null,N=0,T=0,ratio=1.414,flip=null,pgEls=[],cv=[],q=Promise.resolve(),zoom=1,speed=900,cur=0,name="",reader=null,textCache={},token=0;
+const views=["home","conv","viewer"];
+function show(v){views.forEach(x=>$(x).classList.toggle("hide",x!==v));}
+function err(m){$("err").textContent=m||"";}
+const fmt=b=>b>1048576?(b/1048576).toFixed(1)+"MB":Math.ceil(b/1024)+"KB";
+
+/* ---------- upload ---------- */
+$("pick").onclick=()=>$("file").click();
+$("file").onchange=e=>{if(e.target.files[0])start(e.target.files[0]);e.target.value="";};
+const dz=$("drop");
+["dragenter","dragover"].forEach(t=>dz.addEventListener(t,e=>{e.preventDefault();dz.classList.add("over")}));
+["dragleave","drop"].forEach(t=>dz.addEventListener(t,e=>{e.preventDefault();dz.classList.remove("over")}));
+dz.addEventListener("drop",e=>{const f=e.dataTransfer.files[0];if(f)start(f)});
+window.addEventListener("dragover",e=>e.preventDefault());window.addEventListener("drop",e=>e.preventDefault());
+
+function readFile(f,onp){return new Promise((res,rej)=>{reader=new FileReader();reader.onprogress=e=>e.lengthComputable&&onp(e.loaded/e.total);reader.onload=()=>res(reader.result);reader.onerror=()=>rej(new Error("read"));reader.onabort=()=>rej(new Error("abort"));reader.readAsArrayBuffer(f);});}
+
+async function start(f){
+  err("");
+  if(!/\.pdf$/i.test(f.name)&&f.type!=="application/pdf") return err("PDF 파일만 업로드할 수 있습니다.");
+  if(f.size>MAX) return err("파일 용량이 50MB를 초과했습니다. 더 작은 파일을 선택해 주세요.");
+  if(f.size===0) return err("빈 파일입니다.");
+  const my=++token; cleanup(); name=f.name.replace(/\.pdf$/i,"");
+  show("conv");$("cname").textContent=f.name;$("cmeta").textContent=fmt(f.size);$("open").classList.add("hide");$("cancel").classList.remove("hide");$("cover").classList.add("hide");
+  setP(0,"파일을 읽는 중...");
+  try{
+    const buf=await readFile(f,p=>setP(p*.2,"업로드 중 "+Math.round(p*100)+"%"));
+    if(my!==token) return;
+    const head=new Uint8Array(buf.slice(0,1024));
+    if(!new TextDecoder("latin1").decode(head).includes("%PDF-")) throw {name:"InvalidPDFException"};
+    setP(.22,"PDF 구조를 확인하는 중...");
+    pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    if(my!==token) return;
+    N=pdf.numPages;T=N+(N%2?1:0);
+    $("cmeta").textContent=fmt(f.size)+" · 총 "+N+"쪽";
+    const p1=await pdf.getPage(1),vp=p1.getViewport({scale:1});ratio=vp.height/vp.width;
+    const pre=Math.min(N,8);
+    for(let i=0;i<pre;i++){
+      if(my!==token) return;
+      setP(.25+.75*i/pre,"페이지 "+(i+1)+" / "+N+" 준비 중");
+      await ensure(i);
+      if(i===0&&cv[0] instanceof HTMLCanvasElement){const c=$("cover"),s=cv[0];c.width=s.width;c.height=s.height;c.getContext("2d").drawImage(s,0,0);c.classList.remove("hide");}
+    }
+    setP(1,"변환 완료 — 나머지 페이지는 읽는 동안 필요할 때 렌더링됩니다.");
+    $("open").classList.remove("hide");$("cancel").classList.add("hide");
+  }catch(e){
+    if(e&&e.message==="abort") return;
+    show("home");
+    const n=e&&e.name;
+    err(n==="PasswordException"?"암호가 설정된 PDF는 지원하지 않습니다. 암호를 해제한 뒤 다시 시도해 주세요.":
+        n==="InvalidPDFException"||n==="FormatError"?"손상되었거나 올바르지 않은 PDF 파일입니다.":
+        "파일을 처리하는 중 오류가 발생했습니다. 다른 파일로 다시 시도해 주세요.");
+    cleanup();
+  }
+}
+function setP(p,t){$("cbar").style.width=Math.round(p*100)+"%";$("cstat").textContent=t;}
+$("cancel").onclick=()=>{token++;if(reader)reader.abort();cleanup();show("home");};
+
+/* ---------- render ---------- */
+async function ensure(i){
+  if(i<0||i>=N||cv[i]) return; cv[i]="p";
+  const d=pdf; if(!d) return;
+  try{
+    const p=await d.getPage(i+1),b=p.getViewport({scale:1}),sc=Math.min(3,1100/b.width),vp=p.getViewport({scale:sc});
+    const c=document.createElement("canvas");c.width=Math.floor(vp.width);c.height=Math.floor(vp.height);
+    await p.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+    if(d!==pdf) return; cv[i]=c;attach(i);
+  }catch(e){ if(d===pdf){cv[i]=null;markFail(i);} }
+}
+function attach(i){const el=pgEls[i];if(el&&cv[i] instanceof HTMLCanvasElement&&!el.contains(cv[i])){el.textContent="";el.appendChild(cv[i]);}}
+function markFail(i){const el=pgEls[i];if(el)el.innerHTML='<div style="padding:20px;color:#b3261e;font-size:13px">이 페이지를 렌더링하지 못했습니다.</div>';}
+function around(c){[0,1,-1,2,-2,3,4].forEach(d=>{const i=c+d;q=q.then(()=>ensure(i)).then(()=>attach(i));});}
+
+/* ---------- viewer ---------- */
+$("open").onclick=()=>{show("viewer");$("title").textContent=name;$("sl").max=N;$("pn").max=N;cur=0;build(0);buildToc();};
+function dims(){
+  const r=$("stage").getBoundingClientRect(),por=innerWidth<720,aw=r.width-32,ah=r.height-32;
+  const pw=por?Math.min(aw,ah/ratio):Math.min(aw/2,ah/ratio);
+  return [Math.max(120,Math.floor(pw*zoom)),Math.max(160,Math.floor(pw*ratio*zoom)),por];
+}
+function build(start){
+  if(flip){try{flip.destroy()}catch(e){}flip=null;}
+  const st=$("stage");st.textContent="";
+  const [pw,ph,por]=dims(),box=document.createElement("div");box.id="book";
+  box.style.width=(por?pw:pw*2)+"px";box.style.height=ph+"px";st.appendChild(box);
+  pgEls=[];
+  for(let i=0;i<T;i++){
+    const d=document.createElement("div");d.className="pg";
+    if(i===0||i===T-1)d.dataset.density="hard",d.classList.add("hard");
+    if(i>=N)d.classList.add("back");
+    box.appendChild(d);pgEls.push(d);
+  }
+  flip=new St.PageFlip(box,{width:pw,height:ph,size:"fixed",showCover:true,usePortrait:true,flippingTime:speed,maxShadowOpacity:.5,drawShadow:true,mobileScrollSupport:false,startPage:start});
+  flip.loadFromHTML(box.querySelectorAll(".pg"));
+  for(let i=0;i<N;i++)attach(i);
+  flip.on("flip",e=>{upd(e.data);around(e.data);});
+  upd(start);around(start);
+}
+function upd(i){
+  cur=Math.min(i,N-1);const p=cur+1;
+  $("sl").value=p;$("pn").value=p;$("pinfo").textContent="/ "+N;$("prog").style.width=(p/N*100)+"%";
+}
+function go(p){p=Math.max(1,Math.min(N,p|0));if(!flip)return;flip.turnToPage(p-1);upd(p-1);around(p-1);}
+$("prev").onclick=()=>flip&&flip.flipPrev();
+$("next").onclick=()=>flip&&flip.flipNext();
+$("sl").oninput=e=>go(+e.target.value);
+$("pn").onchange=e=>go(+e.target.value);
+addEventListener("keydown",e=>{
+  if($("viewer").classList.contains("hide"))return;
+  if(e.target.tagName==="INPUT"&&e.target.type!=="range")return;
+  if(e.key==="ArrowLeft"){e.preventDefault();flip&&flip.flipPrev();}
+  if(e.key==="ArrowRight"){e.preventDefault();flip&&flip.flipNext();}
+});
+$("zi").onclick=()=>{zoom=Math.min(2.5,zoom+.25);build(cur);};
+$("zo").onclick=()=>{zoom=Math.max(.5,zoom-.25);build(cur);};
+$("fs-b").onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();};
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!$("viewer").classList.contains("hide")&&flip)build(cur);},250);});
+$("home-b").onclick=()=>{token++;cleanup();show("home");};
+
+/* ---------- panels ---------- */
+function panel(html){const p=$("panel");p.innerHTML=html;p.classList.remove("hide");setTimeout(()=>{if(flip)build(cur)},0);return p;}
+function closePanel(){$("panel").classList.add("hide");setTimeout(()=>{if(flip)build(cur)},0);}
+let openP="";
+function toggle(k,fn){if(openP===k){openP="";closePanel();}else{openP=k;fn();}}
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let outline=null;
+async function buildToc(){
+  outline=null;
+  try{
+    const o=await pdf.getOutline();if(!o||!o.length)return;
+    const out=[];
+    const walk=async(items,d)=>{for(const it of items){
+      let idx=null;
+      try{let dest=it.dest;if(typeof dest==="string")dest=await pdf.getDestination(dest);if(dest&&dest[0])idx=typeof dest[0]==="object"?await pdf.getPageIndex(dest[0]):dest[0];}catch(e){}
+      out.push({t:it.title,d,i:idx});
+      if(it.items&&it.items.length)await walk(it.items,d+1);
+    }};
+    await walk(o,0);outline=out;
+  }catch(e){}
+}
+$("toc-b").onclick=()=>toggle("toc",()=>{
+  let h="<h3>목차</h3>";
+  if(outline&&outline.length){h+=outline.map(o=>`<button class="it" style="padding-left:${4+o.d*14}px" data-i="${o.i??""}">${esc(o.t)}</button>`).join("");}
+  else{h+='<p style="color:var(--muted);font-size:13px">이 PDF에는 목차 정보가 없습니다. 아래에서 페이지로 이동하세요.</p>';
+    const step=Math.max(1,Math.ceil(N/30));for(let i=0;i<N;i+=step)h+=`<button class="it" data-i="${i}">${i+1}쪽${step>1?" ~":""}</button>`;}
+  panel(h).onclick=e=>{const b=e.target.closest("[data-i]");if(b&&b.dataset.i!=="")go(+b.dataset.i+1);};
+});
+async function getText(i){
+  if(textCache[i]!==undefined)return textCache[i];
+  const p=await pdf.getPage(i+1),t=await p.getTextContent();
+  return textCache[i]=t.items.map(x=>x.str).join(" ");
+}
+$("se-b").onclick=()=>toggle("se",()=>{
+  const p=panel('<h3>검색</h3><input type="text" id="qi" placeholder="검색어를 입력하세요" autocomplete="off"><div id="qs" style="font-size:13px;color:var(--muted);margin:8px 0"></div><div id="qr"></div>');
+  const inp=$("qi");inp.focus();
+  inp.onkeydown=async e=>{
+    if(e.key!=="Enter")return;
+    const k=inp.value.trim().toLowerCase();if(!k)return;
+    const my=++sTok,res=[];$("qr").textContent="";
+    for(let i=0;i<N&&res.length<200;i++){
+      if(my!==sTok)return;
+      $("qs").textContent="검색 중... "+(i+1)+" / "+N;
+      const tx=await getText(i),j=tx.toLowerCase().indexOf(k);
+      if(j>=0)res.push({i,s:tx.slice(Math.max(0,j-20),j+60)});
+    }
+    if(!res.length){
+      let any=0;for(let i=0;i<Math.min(N,10);i++)any+=(textCache[i]||"").length;
+      $("qs").textContent=any===0?"검색 결과가 없습니다. 스캔된 PDF는 텍스트가 없어 검색이 제한되며, OCR 처리가 필요할 수 있습니다.":"검색 결과가 없습니다.";return;
+    }
+    $("qs").textContent=res.length+"개 페이지에서 발견";
+    $("qr").innerHTML=res.map(r=>`<button class="it" data-i="${r.i}"><b>${r.i+1}쪽</b> ${esc(r.s)}</button>`).join("");
+  };
+  p.onclick=e=>{const b=e.target.closest("[data-i]");if(b)go(+b.dataset.i+1);};
+});
+let sTok=0;
+$("set-b").onclick=()=>toggle("set",()=>{
+  const dark=document.documentElement.dataset.theme==="dark"||(!document.documentElement.dataset.theme&&matchMedia("(prefers-color-scheme:dark)").matches);
+  const p=panel(`<h3>설정</h3>
+   <div class="row"><span>테마</span><button class="btn ghost" id="th">${dark?"밝은 테마로":"어두운 테마로"}</button></div>
+   <div class="row"><span>넘김 속도</span><select id="sp"><option value="1400">느리게</option><option value="900">보통</option><option value="500">빠르게</option></select></div>
+   <div class="row"><button class="btn ghost" id="fc">읽기 집중 모드</button></div>
+   <p style="color:var(--muted);font-size:12px">집중 모드에서 방향키로 넘기고, Esc 키로 해제합니다.</p>`);
+  $("sp").value=String(speed);
+  $("th").onclick=()=>{document.documentElement.dataset.theme=dark?"light":"dark";openP="";closePanel();};
+  $("sp").onchange=e=>{speed=+e.target.value;build(cur);};
+  $("fc").onclick=()=>{$("viewer").classList.add("focus");openP="";$("panel").classList.add("hide");setTimeout(()=>build(cur),0);};
+});
+addEventListener("keydown",e=>{if(e.key==="Escape"&&$("viewer").classList.contains("focus")){$("viewer").classList.remove("focus");setTimeout(()=>flip&&build(cur),0);}});
+
+/* ---------- cleanup ---------- */
+function cleanup(){
+  if(flip){try{flip.destroy()}catch(e){}flip=null;}
+  if(pdf){try{pdf.destroy()}catch(e){}}
+  pdf=null;N=0;T=0;cv=[];pgEls=[];textCache={};outline=null;openP="";zoom=1;sTok++;
+  $("stage").textContent="";$("panel").classList.add("hide");$("viewer").classList.remove("focus");
+}
+</script>
+</body>
+</html>
